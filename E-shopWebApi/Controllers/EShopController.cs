@@ -15,6 +15,7 @@ namespace E_shopWebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class EShopController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -28,6 +29,7 @@ namespace E_shopWebApi.Controllers
 
         [HttpPost]
         [Route("/login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -49,6 +51,7 @@ namespace E_shopWebApi.Controllers
 
         [HttpPost]
         [Route("/register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] Customer newCustomer)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -78,15 +81,16 @@ namespace E_shopWebApi.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, customer.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(ClaimTypes.Name, customer.Email)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(30),
-                SigningCredentials = credentials
+                SigningCredentials = credentials,
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -97,7 +101,6 @@ namespace E_shopWebApi.Controllers
 
         [HttpGet]
         [Route("/products")]
-        [Authorize]
         public async Task<IActionResult> GetProducts()
         {
             var products = await _dbContext.Products.ToListAsync();
@@ -106,7 +109,6 @@ namespace E_shopWebApi.Controllers
 
         [HttpPost]
         [Route("/makeOrder")]
-        [Authorize]
         public async Task<IActionResult> MakeOrder([FromBody] Order model)
         { 
             // TODO
