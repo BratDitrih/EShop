@@ -15,7 +15,7 @@ namespace E_shopWebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    //[Authorize]
     public class EShopController : ControllerBase
     {
         private readonly IConfiguration _configuration;

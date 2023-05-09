@@ -5,21 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:E_shopClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <WrapPanel Orientation="Vertical">
-        <StackPanel Orientation="Horizontal">
-            <Label Content="Email"/>
-            <TextBox x:Name="txtEmail" Width="100"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-            <Label Content="Password"/>
-            <TextBox x:Name="txtPassword" Width="100"/>
-        </StackPanel>
-        <Button Content="Confirm" Click="Login_Click"/>
+        Title="MainWindow" Height="450" Width="800" FontSize="16" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <StackPanel Margin="0,20,0,0">
-            <ListBox x:Name="ProductsList"/>
-            <Button Content="Refresh" Click="Refresh_Click"/>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ListView Grid.Column="0" x:Name="ProductsListView" ItemsSource="{Binding Products}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
+                        <GridViewColumn Header="Price" DisplayMemberBinding="{Binding Price}" />
+                        <GridViewColumn Header="QuantityInStock" DisplayMemberBinding="{Binding QuantityInStock}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+
+            <ListView Grid.Column="1" x:Name="ProductsAtCartListView" ItemsSource="{Binding ProductsAtCart}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
+                        <GridViewColumn Header="Price" DisplayMemberBinding="{Binding Price}" />
+                        <GridViewColumn Header="Quantity" DisplayMemberBinding="{Binding Quantity}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <Button Content="Добавить в корзину" Width="160" Margin="5" Click="AddToCartButton_Click"/>
         </StackPanel>
-    </WrapPanel>
+        
+        <StatusBar Grid.Row="2" Background="AliceBlue">
+            <Label x:Name="StatusLabel" Height="30"/>
+        </StatusBar>
+    </Grid>
 </Window>
