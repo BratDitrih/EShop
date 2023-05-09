@@ -5,12 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:E_shopClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" FontSize="16" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
+        Title="MainWindow" Height="450" Width="850" FontSize="16" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -20,34 +19,45 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <ListView Grid.Column="0" x:Name="ProductsListView" ItemsSource="{Binding Products}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
-                        <GridViewColumn Header="Price" DisplayMemberBinding="{Binding Price}" />
-                        <GridViewColumn Header="QuantityInStock" DisplayMemberBinding="{Binding QuantityInStock}" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <Border Grid.Column="0" BorderThickness="2" BorderBrush="Black" Margin="1">
+                <StackPanel Orientation="Vertical">
+                    <Label Content="Доступные товары" HorizontalAlignment="Center" FontWeight="Bold" Margin="5"/>
 
+                    <ListView x:Name="ProductsListView" ItemsSource="{Binding Products}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Width="150" Header="Name" DisplayMemberBinding="{Binding Name}" />
+                                <GridViewColumn Width="110" Header="Price" DisplayMemberBinding="{Binding Price}" />
+                                <GridViewColumn Width="125" Header="QuantityInStock" DisplayMemberBinding="{Binding QuantityInStock}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+            </Border>
 
-            <ListView Grid.Column="1" x:Name="ProductsAtCartListView" ItemsSource="{Binding ProductsAtCart}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
-                        <GridViewColumn Header="Price" DisplayMemberBinding="{Binding Price}" />
-                        <GridViewColumn Header="Quantity" DisplayMemberBinding="{Binding Quantity}" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <Border Grid.Column="1" BorderThickness="2" BorderBrush="Black" Margin="1">
+                <StackPanel Orientation="Vertical">
+                    <Label Content="Корзина" HorizontalAlignment="Center" FontWeight="Bold" Margin="5"/>
+
+                    <ListView x:Name="ProductsAtCartListView" ItemsSource="{Binding ProductsAtCart}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Width="150"  Header="Name" DisplayMemberBinding="{Binding Name}" />
+                                <GridViewColumn Width="110"  Header="Price" DisplayMemberBinding="{Binding Price}" />
+                                <GridViewColumn Width="125"  Header="Quantity" DisplayMemberBinding="{Binding Quantity}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+            </Border>
         </Grid>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal">
+        <DockPanel Grid.Row="1" Margin="5">
             <Button Content="Добавить в корзину" Width="160" Margin="5" Click="AddToCartButton_Click"/>
-        </StackPanel>
-        
-        <StatusBar Grid.Row="2" Background="AliceBlue">
-            <Label x:Name="StatusLabel" Height="30"/>
-        </StatusBar>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Удалить товар" Width="120" Margin="5" Click="DeleteFromCartButton_Click"/>
+                <Button Content="Оформить заказ" Width="135" Margin="5" Click="MakeOrderButton_Click"/>
+            </StackPanel>
+        </DockPanel>
     </Grid>
 </Window>

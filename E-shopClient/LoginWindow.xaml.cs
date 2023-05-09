@@ -32,15 +32,21 @@ namespace E_shopClient
             try
             {
                 var client = new HttpClient();
+
                 var user = new User(EmailTextBox.Text, PasswordBox.Password);
+
                 var content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("http://localhost:5000/login", content);
+
+                var response = await client.PostAsync("http://localhost:5283/login", content);
+
                 response.EnsureSuccessStatusCode();
+
                 var json = await response.Content.ReadAsStringAsync();
+
                 string token = JObject.Parse(json)["token"].ToString();
 
-                //MainWindow mainWindow = new MainWindow(token);
-                //mainWindow.Show();
+                MainWindow mainWindow = new MainWindow(token);
+                mainWindow.Show();
                 Close();
             }
             catch (Exception ex)

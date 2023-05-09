@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Security.Policy;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -34,10 +35,10 @@ namespace E_shopClient
         private string _token;
         public ObservableCollection<Product> Products { get; set; }
         public ObservableCollection<ProductAtCart> ProductsAtCart { get; set; } = new();
-        public MainWindow()
+        public MainWindow(string token)
         {
             InitializeComponent();
-            //_token = token;
+            _token = token;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -45,17 +46,23 @@ namespace E_shopClient
             try
             {
                 HttpClient client = new HttpClient();
-                //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-                HttpResponseMessage response = await client.GetAsync("http://localhost:5000/products");
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+                HttpResponseMessage response = await client.GetAsync("http://localhost:5283/products");
+
+                response.EnsureSuccessStatusCode();
+
                 var json = await response.Content.ReadAsStringAsync();
+
                 Products = JsonConvert.DeserializeObject<ObservableCollection<Product>>(json);
                 ProductsListView.ItemsSource = Products;
             }
             catch (Exception ex)
             {
-                StatusLabel.Content = "Ошибка: " + ex.Message;
+                ShowErrorWindow(ex);
             }
-           
+
         }
 
         private void AddToCartButton_Click(object sender, RoutedEventArgs e)
@@ -72,7 +79,8 @@ namespace E_shopClient
             }
             else
             {
-                ProductsAtCart.Add(new ProductAtCart { 
+                ProductsAtCart.Add(new ProductAtCart
+                {
                     ProductId = productToAdd.ProductId,
                     Name = productToAdd.Name,
                     Price = productToAdd.Price,
@@ -80,35 +88,62 @@ namespace E_shopClient
                 });
             }
         }
-    }
 
-    public record Product(int ProductId, string Name, decimal Price, uint QuantityInStock);
+        private void DeleteFromCartButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProductsAtCartListView.SelectedItem == null) return;
 
-    public class ProductAtCart : INotifyPropertyChanged
-    {
-        public int ProductId { get; set; }
-        public string Name { get; set; }
-        public decimal Price { get; set; }
+            var selectedItem = (ProductsAtCartListView.SelectedItem as ProductAtCart);
 
-        private uint _quantity;
-        public uint Quantity {
-            get { return _quantity; }
-            set
+            if (selectedItem.Quantity == 1)
             {
-                if (_quantity != value)
-                {
-                    _quantity = value;
-                    OnPropertyChanged(nameof(Quantity));
-                }
+                ProductsAtCart.Remove(selectedItem);
+            }
+            else
+            {
+                selectedItem.Quantity -= 1;
+            }
+        }
+
+        private async void MakeOrderButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var tokenHadnler = new JwtSecurityTokenHandler();
+                var token = tokenHadnler.ReadJwtToken(_token);
+                string customerId = token.Claims.First(c => c.Type == "nameid").Value;
+
+                var client = new HttpClient();
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+                var products = ProductsAtCart.Select(p => new { p.ProductId , p.Quantity}).ToList();
+                var content = new StringContent(JsonConvert.SerializeObject(new { CustomerId = customerId, Products = products }), Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync("http://localhost:5283/makeOrder", content);
+
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                // responseString
+
+                ProductsAtCart.Clear();
+            }
+            catch (Exception ex)
+            {
+                ShowErrorWindow(ex);
             }
 
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
+        private void ShowErrorWindow(Exception ex)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error) == MessageBoxResult.OK)
+            {
+                Close();
+            }
         }
     }
+
+    public record Product(int ProductId, string Name, decimal Price, uint QuantityInStock);
 }

@@ -55,22 +55,29 @@ namespace E_shopWebApi.Controllers
         public async Task<IActionResult> Register([FromBody] Customer newCustomer)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            try
+
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
             {
-                Customer customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.Email == newCustomer.Email);
+                try
+                {
+                    Customer customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.Email == newCustomer.Email);
 
-                if (customer != null) return Conflict("Пользователь с таким Email уже существует");
+                    if (customer != null) return Conflict("Пользователь с таким Email уже существует");
 
-                var token = GenerateJwtToken(newCustomer);
+                    _dbContext.Customers.Add(newCustomer);
+                    await _dbContext.SaveChangesAsync();
 
-                _dbContext.Customers.Add(newCustomer);
-                await _dbContext.SaveChangesAsync();
+                    var token = GenerateJwtToken(await _dbContext.Customers.FirstOrDefaultAsync(c => c.Email == newCustomer.Email));
 
-                return Ok(new { Token = token });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Внутрення ошибка сервера: " + ex.Message);
+                    await transaction.CommitAsync();
+
+                    return Ok(new { Token = token });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, "Внутрення ошибка сервера: " + ex.Message);
+                }
             }
         }
 
@@ -81,7 +88,7 @@ namespace E_shopWebApi.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, customer.Email)
+                new Claim(ClaimTypes.NameIdentifier, customer.CustomerId.ToString())
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -109,11 +116,52 @@ namespace E_shopWebApi.Controllers
 
         [HttpPost]
         [Route("/makeOrder")]
-        public async Task<IActionResult> MakeOrder([FromBody] Order model)
-        { 
-            // TODO
+        public async Task<IActionResult> MakeOrder([FromBody] OrderModel model)
+        {
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.CustomerId == model.CustomerId);
 
-            return Ok();
+                    var order = new Order
+                    {
+                        OrderDate = DateTime.UtcNow,
+                        Completed = false,
+                        Customer = customer
+                    };
+                    _dbContext.Orders.Add(order);
+                    await _dbContext.SaveChangesAsync();
+
+                    foreach (var item in model.Products)
+                    {
+                        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductId == item.ProductId);
+
+                        if (product.QuantityInStock < item.Quantity)
+                        {
+                            return BadRequest("Недостаточно товара на складе");
+                        }
+                        var orderDetail = new OrderDetail
+                        {
+                            Product = product,
+                            Quantity = item.Quantity,
+                            Order = order
+                        };
+                        _dbContext.OrderDetails.Add(orderDetail);
+
+                        product.QuantityInStock -= item.Quantity;
+                    }
+                    await _dbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, "Внутрення ошибка сервера: " + ex.Message);
+                }
+            }
         }
     }
 }
