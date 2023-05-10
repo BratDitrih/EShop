@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using E_shopClient.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -43,7 +44,13 @@ namespace E_shopClient
             _token = token;
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+
+            RefreshProductList();
+        }
+
+        private async void RefreshProductList()
         {
             try
             {
@@ -52,7 +59,6 @@ namespace E_shopClient
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
                 HttpResponseMessage response = await client.GetAsync(URL + "products");
-
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -64,7 +70,6 @@ namespace E_shopClient
             {
                 ShowErrorWindow(ex);
             }
-
         }
 
         private void AddToCartButton_Click(object sender, RoutedEventArgs e)
@@ -111,25 +116,21 @@ namespace E_shopClient
         {
             try
             {
-                var tokenHadnler = new JwtSecurityTokenHandler();
-                var token = tokenHadnler.ReadJwtToken(_token);
-                string customerId = token.Claims.First(c => c.Type == "nameid").Value;
-
                 var client = new HttpClient();
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-                var products = ProductsAtCart.Select(p => new { p.ProductId , p.Quantity}).ToList();
-                var content = new StringContent(JsonConvert.SerializeObject(new { CustomerId = customerId, Products = products }), Encoding.UTF8, "application/json");
+                var products = ProductsAtCart.Select(p => new { p.ProductId, p.Quantity }).ToList();
+                var content = new StringContent(JsonConvert.SerializeObject(new { CustomerId = CurrentId, Products = products }), Encoding.UTF8, "application/json");
 
                 var response = await client.PostAsync(URL + "makeOrder", content);
-
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                // responseString
-
                 ProductsAtCart.Clear();
+                RefreshProductList();
+
+                ShowConfirmWindow("Заказ успешно офрлмен", "Готово", MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -138,11 +139,56 @@ namespace E_shopClient
 
         }
 
-        private void ShowErrorWindow(Exception ex)
+        public string CurrentId
         {
-            if (MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error) == MessageBoxResult.OK)
+            get
             {
-                Close();
+                var tokenHadnler = new JwtSecurityTokenHandler();
+                var token = tokenHadnler.ReadJwtToken(_token);
+                return token.Claims.First(c => c.Type == "nameid").Value;
+            }
+        }
+
+        private void ShowConfirmWindow(string message, string title, MessageBoxImage messageBoxImage, bool needToClose = false)
+        {
+            if (MessageBox.Show(message, title, MessageBoxButton.OK, messageBoxImage) == MessageBoxResult.OK)
+            {
+                if (needToClose)
+                {
+                    Close();
+                }   
+            }
+        }
+
+        private void ShowErrorWindow(Exception ex) => ShowConfirmWindow(ex.Message, "Ошибка", MessageBoxImage.Error, true);
+
+        private async void ShowOrdersButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+                HttpResponseMessage response = await client.GetAsync(URL + $"customers/{CurrentId}/orders");
+                response.EnsureSuccessStatusCode();
+
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                if (responseString == "У данного пользователя нет заказов")
+                {
+                    ShowConfirmWindow(responseString, "Ошибка", MessageBoxImage.Information);
+                }
+
+                var orders = JsonConvert.DeserializeObject<List<Order>>(responseString);
+
+                OrdersWindow ordersWindow = new OrdersWindow(orders, this);
+                ordersWindow.Show();
+                Hide();
+            }
+            catch (Exception ex)
+            {
+                ShowErrorWindow(ex);
             }
         }
     }

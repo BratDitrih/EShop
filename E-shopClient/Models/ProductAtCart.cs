@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
-namespace E_shopClient
+namespace E_shopClient.Models
 {
     public class ProductAtCart : INotifyPropertyChanged
     {
@@ -9,7 +11,8 @@ namespace E_shopClient
         public decimal Price { get; set; }
 
         private uint _quantity;
-        public uint Quantity {
+        public uint Quantity
+        {
             get { return _quantity; }
             set
             {

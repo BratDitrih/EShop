@@ -39,7 +39,6 @@ namespace E_shopClient
                 var content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
 
                 var response = await client.PostAsync(URL + "login", content);
-
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();

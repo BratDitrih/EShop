@@ -110,14 +110,23 @@ namespace E_shopWebApi.Controllers
         [Route("/products")]
         public async Task<IActionResult> GetProducts()
         {
-            var products = await _dbContext.Products.ToListAsync();
-            return Ok(products);
+            try
+            {
+                var products = await _dbContext.Products.ToListAsync();
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Внутрення ошибка сервера: " + ex.Message);
+            }
         }
 
         [HttpPost]
         [Route("/makeOrder")]
         public async Task<IActionResult> MakeOrder([FromBody] OrderModel model)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             using (var transaction = await _dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -161,6 +170,41 @@ namespace E_shopWebApi.Controllers
                     await transaction.RollbackAsync();
                     return StatusCode(500, "Внутрення ошибка сервера: " + ex.Message);
                 }
+            }
+        }
+
+        [HttpGet]
+        [Route("/customers/{id}/orders")]
+        public async Task<IActionResult> ShowOrdersOfCustomer([FromRoute] int id)
+        {
+            try
+            {
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.CustomerId == id);
+
+                if (customer == null)
+                {
+                    return BadRequest("Пользователь не найден");
+                }
+                var orders = _dbContext.Orders.Where(o => o.CustomerId == id).ToList();
+
+                if (orders == null)
+                {
+                    return Ok("У данного пользователя нет заказов");
+                }
+                else
+                {
+                    var result = orders.Select(o => new {
+                        o.OrderId, 
+                        o.OrderDate, 
+                        o.Completed, 
+                        Products = _dbContext.OrderDetails.Where(x => x.OrderId == o.OrderId).Select(od => new { od.ProductId, od.Product.Name, od.Product.Price, od.Quantity}).ToList()
+                    }).ToList();
+                    return Ok(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Внутрення ошибка сервера: " + ex.Message);
             }
         }
     }

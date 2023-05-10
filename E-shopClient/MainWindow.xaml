@@ -54,6 +54,7 @@
 
         <DockPanel Grid.Row="1" Margin="5">
             <Button Content="Добавить в корзину" Width="160" Margin="5" Click="AddToCartButton_Click"/>
+            <Button Content="Просмотреть заказы" Width="160" Margin="5" Click="ShowOrdersButton_Click"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Удалить товар" Width="120" Margin="5" Click="DeleteFromCartButton_Click"/>
                 <Button Content="Оформить заказ" Width="135" Margin="5" Click="MakeOrderButton_Click"/>
