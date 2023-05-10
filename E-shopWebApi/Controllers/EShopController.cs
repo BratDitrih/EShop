@@ -1,3 +1,4 @@
+using Bogus;
 using E_shopDAL;
 using E_shopDAL.Models;
 using E_shopWebApi.Models;
@@ -25,6 +26,25 @@ namespace E_shopWebApi.Controllers
         {
             _configuration = configuration;
             _dbContext = dBcontext;
+            //FillDb();
+        }
+
+        private void FillDb()
+        {
+            if (_dbContext != null)
+            {
+                _dbContext.Products.RemoveRange(_dbContext.Products);
+                var faker = new Faker();
+                var products = Enumerable.Range(1, 10).Select(x => new Product
+                {
+                    Name = faker.Commerce.ProductName(),
+                    Price = Math.Round(faker.Random.Decimal(100m, 100_000m), 2),
+                    QuantityInStock = faker.Random.UInt(0, 100)
+                }).ToList();
+
+                _dbContext.Products.AddRange(products);
+                _dbContext.SaveChanges();
+            }
         }
 
         [HttpPost]

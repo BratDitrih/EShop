@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:E_shopClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="850" FontSize="16" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
+        Title="MainWindow" Height="450" Width="950" FontSize="16" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Grid>
         <Grid.RowDefinitions>
@@ -26,8 +26,8 @@
                     <ListView x:Name="ProductsListView" ItemsSource="{Binding Products}">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Width="150" Header="Name" DisplayMemberBinding="{Binding Name}" />
-                                <GridViewColumn Width="110" Header="Price" DisplayMemberBinding="{Binding Price}" />
+                                <GridViewColumn Width="200" Header="Name" DisplayMemberBinding="{Binding Name}" />
+                                <GridViewColumn Width="120" Header="Price" DisplayMemberBinding="{Binding Price}" />
                                 <GridViewColumn Width="125" Header="QuantityInStock" DisplayMemberBinding="{Binding QuantityInStock}" />
                             </GridView>
                         </ListView.View>
@@ -42,8 +42,8 @@
                     <ListView x:Name="ProductsAtCartListView" ItemsSource="{Binding ProductsAtCart}">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Width="150"  Header="Name" DisplayMemberBinding="{Binding Name}" />
-                                <GridViewColumn Width="110"  Header="Price" DisplayMemberBinding="{Binding Price}" />
+                                <GridViewColumn Width="200"  Header="Name" DisplayMemberBinding="{Binding Name}" />
+                                <GridViewColumn Width="120"  Header="Price" DisplayMemberBinding="{Binding Price}" />
                                 <GridViewColumn Width="125"  Header="Quantity" DisplayMemberBinding="{Binding Quantity}" />
                             </GridView>
                         </ListView.View>

@@ -38,6 +38,17 @@ namespace E_shopClient
         private string _token;
         public ObservableCollection<Product> Products { get; set; }
         public ObservableCollection<ProductAtCart> ProductsAtCart { get; set; } = new();
+
+        public string CurrentId
+        {
+            get
+            {
+                var tokenHadnler = new JwtSecurityTokenHandler();
+                var token = tokenHadnler.ReadJwtToken(_token);
+                return token.Claims.First(c => c.Type == "nameid").Value;
+            }
+        }
+
         public MainWindow(string token)
         {
             InitializeComponent();
@@ -114,6 +125,11 @@ namespace E_shopClient
 
         private async void MakeOrderButton_Click(object sender, RoutedEventArgs e)
         {
+            if (ProductsAtCart.Count == 0)
+            {
+                return;
+            }
+
             try
             {
                 var client = new HttpClient();
@@ -137,16 +153,6 @@ namespace E_shopClient
                 ShowErrorWindow(ex);
             }
 
-        }
-
-        public string CurrentId
-        {
-            get
-            {
-                var tokenHadnler = new JwtSecurityTokenHandler();
-                var token = tokenHadnler.ReadJwtToken(_token);
-                return token.Claims.First(c => c.Type == "nameid").Value;
-            }
         }
 
         private void ShowConfirmWindow(string message, string title, MessageBoxImage messageBoxImage, bool needToClose = false)

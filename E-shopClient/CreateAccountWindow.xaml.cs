@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,27 +19,36 @@ using System.Windows.Shapes;
 namespace E_shopClient
 {
     /// <summary>
-    /// Логика взаимодействия для LoginWindow.xaml
+    /// Логика взаимодействия для CreateAccount.xaml
     /// </summary>
-    public partial class LoginWindow : Window
+    public partial class CreateAccountWindow : Window
     {
         private readonly string URL = "https://localhost:5283/";
-        public LoginWindow()
+
+        private LoginWindow _loginWindow;
+        public CreateAccountWindow(LoginWindow loginWindow)
         {
             InitializeComponent();
+            _loginWindow = loginWindow;
         }
 
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
+        private void ReturnButton_Click(object sender, RoutedEventArgs e)
+        {
+            _loginWindow.Show();
+            Close();
+        }
+
+        private async void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 var client = new HttpClient();
 
-                var user = new User(EmailTextBox.Text, PasswordBox.Password);
+                var user = new NewUser(EmailTextBox.Text, PasswordBox.Password, NameTextBox.Text, PhoneNumberTextBox.Text, AddressTextBox.Text);
 
                 var content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync(URL + "login", content);
+                var response = await client.PostAsync(URL + "register", content);
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -47,6 +57,7 @@ namespace E_shopClient
 
                 MainWindow mainWindow = new MainWindow(token);
                 mainWindow.Show();
+                _loginWindow.Close();
                 Close();
             }
             catch (Exception ex)
@@ -54,14 +65,7 @@ namespace E_shopClient
                 ErrorMessageTextBlock.Text = "Ошибка: " + ex.Message;
             }
         }
-
-        private void CreateAccountButton_Click(object sender, RoutedEventArgs e)
-        {
-            var createAccountWindow = new CreateAccountWindow(this);
-            createAccountWindow.Show();
-            Hide();
-        }
     }
 
-    public record User(string Email, string Password);
+    public record NewUser(string Email, string Password, string Name, string PhoneNumber, string Address);
 }
