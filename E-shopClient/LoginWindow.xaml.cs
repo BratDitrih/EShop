@@ -22,6 +22,7 @@ namespace E_shopClient
     /// </summary>
     public partial class LoginWindow : Window
     {
+        private readonly string URL = "https://localhost:5283/";
         public LoginWindow()
         {
             InitializeComponent();
@@ -37,7 +38,7 @@ namespace E_shopClient
 
                 var content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync("http://localhost:5283/login", content);
+                var response = await client.PostAsync(URL + "login", content);
 
                 response.EnsureSuccessStatusCode();
 

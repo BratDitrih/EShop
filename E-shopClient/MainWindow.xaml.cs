@@ -32,6 +32,8 @@ namespace E_shopClient
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly string URL = "https://localhost:5283/";
+
         private string _token;
         public ObservableCollection<Product> Products { get; set; }
         public ObservableCollection<ProductAtCart> ProductsAtCart { get; set; } = new();
@@ -49,7 +51,7 @@ namespace E_shopClient
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
-                HttpResponseMessage response = await client.GetAsync("http://localhost:5283/products");
+                HttpResponseMessage response = await client.GetAsync(URL + "products");
 
                 response.EnsureSuccessStatusCode();
 
@@ -119,7 +121,7 @@ namespace E_shopClient
                 var products = ProductsAtCart.Select(p => new { p.ProductId , p.Quantity}).ToList();
                 var content = new StringContent(JsonConvert.SerializeObject(new { CustomerId = customerId, Products = products }), Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync("http://localhost:5283/makeOrder", content);
+                var response = await client.PostAsync(URL + "makeOrder", content);
 
                 response.EnsureSuccessStatusCode();
 
